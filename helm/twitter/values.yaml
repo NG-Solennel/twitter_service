@@ -1,0 +1,35 @@
+replicaCount: 3
+
+image:
+  repository: 225220763449.dkr.ecr.us-east-1.amazonaws.com/twitter-service
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8080
+
+env:
+  DB_URL: "jdbc:mysql://mysql-service:3306/twitter"
+  DB_USER: "root"
+  DB_PASSWORD: "password"
+  AUTH_SERVICE_URL: "http://auth-service:9000"
+  ANDREW_ID: "sgisubiz"
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "500m"
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /twitter
+    alb.ingress.kubernetes.io/tags: "Project=twitter-phase-2"

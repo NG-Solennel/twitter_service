@@ -1,0 +1,64 @@
+name: Deploy Twitter Service
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'corretto'
+
+      - name: Build with Maven
+        working-directory: web
+        run: mvn package -DskipTests -q
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push Docker image
+        working-directory: web
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: twitter-service
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Update kubeconfig
+        run: |
+          export KOPS_STATE_STORE=${{ secrets.KOPS_STATE_STORE }}
+          kops export kubecfg cluster.k8s.local --admin
+
+      - name: Deploy to Kubernetes
+        run: |
+          helm upgrade --install auth k8s/helm/auth
+          helm upgrade --install twitter k8s/helm/twitter
+
+      - name: Validate endpoint
+        run: |
+          sleep 30
+          ENDPOINT=$(kubectl get ingress twitter-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          echo "Endpoint: $ENDPOINT"
+          curl -f "http://$ENDPOINT/twitter?user_id=1&type=both&phrase=a&hashtag=a&timestamp=1767243600"

@@ -1,0 +1,8 @@
+# Replace with your actual EBS snapshot ID after taking snapshot
+snapshotId: "snap-00580988a843b937e"
+storageSize: "50Gi"
+storageClass: "mysql-gp2"
+
+mysql:
+  password: "password"
+  database: "twitter"
