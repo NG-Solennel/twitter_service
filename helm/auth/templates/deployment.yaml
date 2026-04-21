@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: public.ecr.aws/cc619/cmucc-semesterproject-auth-rest:arm64
+          image: public.ecr.aws/cc619/cmucc-semesterproject-auth-rest:amd64
           ports:
             - containerPort: 9000
           resources:

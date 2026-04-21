@@ -1,4 +1,4 @@
-replicaCount: 3
+replicaCount: 4
 
 image:
   repository: 225220763449.dkr.ecr.us-east-1.amazonaws.com/twitter-service
@@ -10,19 +10,19 @@ service:
   port: 8080
 
 env:
-  DB_URL: "jdbc:mysql://mysql-service:3306/twitter"
-  DB_USER: "root"
-  DB_PASSWORD: "password"
+  DB_URL: "jdbc:mysql://twitter-phase3-mysql.cshaoaewsyqo.us-east-1.rds.amazonaws.com:3306/twitter?useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&useSSL=false&allowPublicKeyRetrieval=true"
+  DB_USER: "admin"
+  DB_PASSWORD: "TwitterPhase3Pass!"
   AUTH_SERVICE_URL: "http://auth-service:9000"
   ANDREW_ID: "sgisubiz"
 
 resources:
   requests:
-    memory: "256Mi"
-    cpu: "250m"
-  limits:
     memory: "512Mi"
-    cpu: "500m"
+    cpu: "200m"
+  limits:
+    memory: "1.5Gi"
+    cpu: "1000m"
 
 ingress:
   enabled: true
@@ -32,4 +32,4 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/healthcheck-path: /twitter
-    alb.ingress.kubernetes.io/tags: "Project=twitter-phase-2"
+    alb.ingress.kubernetes.io/tags: "Project=twitter-phase-3"
